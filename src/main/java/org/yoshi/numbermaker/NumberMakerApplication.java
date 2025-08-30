@@ -1,4 +1,4 @@
-package numbermaker;
+package org.yoshi.numbermaker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

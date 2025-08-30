@@ -1,39 +1,37 @@
-package numbermaker;
+package org.yoshi.numbermaker;
 
-import numbermaker.dto.NumberRequest;
-import numbermaker.dto.NumberResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.yoshi.dto.PrimeCheckRequest;
+import org.yoshi.dto.PrimeCheckResponse;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Service
+//@Service
 public class NumberProducerService {
 
     private static final Logger logger = LoggerFactory.getLogger(NumberProducerService.class);
 
     private final WebClient webClient;
-    private final Random random = new Random();
     private final AtomicLong counter = new AtomicLong(0);
-
+    private RandomNumberMaker randomNumberMaker;
     @Value("${numbermaster.url:http://numbermaster:8081}")
     private String numberMasterUrl;
 
     public NumberProducerService() {
+        this.randomNumberMaker = new RandomNumberMaker();
         this.webClient = WebClient.builder()
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
                 .build();
     }
 
-    @Scheduled(fixedRate = 2000) // Send a number every 2 seconds
+    @Scheduled(fixedRate = 200)
     public void produceAndSendNumber() {
-        // Generate a random number between 1 and 10000
-        long number = random.nextInt(10000) + 1;
+        long number = randomNumberMaker.produceNextNumber();
 
         logger.info("Producing number: {}", number);
 
@@ -41,26 +39,21 @@ public class NumberProducerService {
     }
 
     private void sendNumberToMaster(long number) {
-        NumberRequest request = new NumberRequest(number, counter.incrementAndGet());
+        PrimeCheckRequest request = new PrimeCheckRequest(number, counter.incrementAndGet());
 
         webClient.post()
                 .uri(numberMasterUrl + "/api/numbers/evaluate")
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(NumberResponse.class)
+                .bodyToMono(PrimeCheckResponse.class)
                 .doOnSuccess(response -> handleResponse(response))
                 .doOnError(error -> logger.error("Error sending number to NumberMaster: {}", error.getMessage()))
                 .subscribe();
     }
 
-    private void handleResponse(NumberResponse response) {
+    private void handleResponse(PrimeCheckResponse response) {
         if (response != null) {
             logger.info("received response : {}", response);
-            //logger.info("Received response for number {}: isPrime={}, isMersenne={}, message='{}'",
-            //        response.number(), response.isPrime(), response.isMersenne(), response.message());
         }
     }
-
-    // DTOs
-
 }
