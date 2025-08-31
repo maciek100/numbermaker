@@ -4,10 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.yoshi.dto.PrimeCheckRequest;
-import org.yoshi.dto.PrimeCheckResponse;
+import org.yoshi.dto.NumberCheckRequest;
+//import org.yoshi.dto.PrimeCheckResponse;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -39,19 +38,19 @@ public class NumberProducerService {
     }
 
     private void sendNumberToMaster(long number) {
-        PrimeCheckRequest request = new PrimeCheckRequest(number, counter.incrementAndGet());
+        NumberCheckRequest request = new NumberCheckRequest(number, counter.incrementAndGet());
 
         webClient.post()
                 .uri(numberMasterUrl + "/api/numbers/evaluate")
                 .bodyValue(request)
                 .retrieve()
-                .bodyToMono(PrimeCheckResponse.class)
+                .bodyToMono(NumberCheckResponse2.class)
                 .doOnSuccess(response -> handleResponse(response))
                 .doOnError(error -> logger.error("Error sending number to NumberMaster: {}", error.getMessage()))
                 .subscribe();
     }
 
-    private void handleResponse(PrimeCheckResponse response) {
+    private void handleResponse(NumberCheckResponse2 response) {
         if (response != null) {
             logger.info("received response : {}", response);
         }

@@ -10,7 +10,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import org.yoshi.dto.PrimeCheckRequest;
+import org.yoshi.dto.NumberCheckRequest;
 
 import java.net.URI;
 
@@ -35,7 +35,7 @@ public class NumberMasterClient {
                 URI.create("ws://localhost:8081/ws/numbers")).get();
 
         for (int i = 0; i < 5; i++) {
-            PrimeCheckRequest request = new PrimeCheckRequest(123L + i, 1L + i);
+            NumberCheckRequest request = new NumberCheckRequest(123L + i, 1L + i);
             String json = objectMapper.writeValueAsString(request);
             session.sendMessage(new TextMessage(json));
         }
